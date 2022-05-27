@@ -2,15 +2,23 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strings"
 )
 
-func main() {
-	// getCmdParams()
+// 1. read cmd params: <source_path> <destination_path> <file_to_replace_path>
+// 1. read file params[0]
+// 2. split string, only imports, with "" or ''
+// 3. get path
+// 4. copy files to ./files/
+// 5. replace main file to import the types from ./files/
 
-	f, err := os.Open("types.ts")
+func main() {
+	srcPath, dstPath, fileToReplacePath := getCmdParams()
+
+	f, err := os.Open(srcPath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -26,12 +34,13 @@ func main() {
 		path := split[1]
 
 		if path == "" {
+			fmt.Println(fileToReplacePath)
 			continue
 		}
 
 		tspath := path + ".ts"
 
-		copy(tspath, "./files/"+tspath)
+		copy(tspath, dstPath+tspath)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -39,9 +48,9 @@ func main() {
 	}
 }
 
-// func getCmdParams() (string, string) {
-// 	if len(os.Args) != 3 {
-// 		log.Fatal("Usage: go run parser.go <input_file> <output_file>")
-// 	}
-// 	return os.Args[1], os.Args[2]
-// }
+func getCmdParams() (string, string, string) {
+	if len(os.Args) != 4 {
+		log.Fatal("Usage: go run . <source_path> <destination_path> <file_to_replace_path>")
+	}
+	return os.Args[1], os.Args[2], os.Args[3]
+}
