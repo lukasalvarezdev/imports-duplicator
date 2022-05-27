@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	srcPath, dstPath := getCmdParams()
+	srcPath, dstPath, fileToReplacePath := getCmdParams()
 
 	f, err := os.Open(srcPath)
 
@@ -21,6 +21,7 @@ func main() {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	paths := make([]string, 0)
 
 	for scanner.Scan() {
 		txt := scanner.Text()
@@ -41,7 +42,10 @@ func main() {
 		fileName := getFileName(path)
 
 		copy(srcPath, dstPath+fileName)
+		paths = append(paths, path)
 	}
+
+	updatePaths(paths, srcPath, dstPath, fileToReplacePath)
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
@@ -72,12 +76,9 @@ func getPath(split []string) (string, error) {
 	return path, nil
 }
 
-func getCmdParams() (string, string) {
-	// if len(os.Args) != 4 {
-	// 	log.Fatal("Usage: go run . <source_path> <destination_path> <file_to_replace_path>")
-	// }
-	if len(os.Args) != 3 {
-		log.Fatal("Usage: go run . <source_path> <destination_path>")
+func getCmdParams() (string, string, string) {
+	if len(os.Args) != 4 {
+		log.Fatal("Usage: go run . <source_path> <destination_path> <file_to_replace_path>")
 	}
-	return os.Args[1], os.Args[2]
+	return os.Args[1], os.Args[2], os.Args[3]
 }
