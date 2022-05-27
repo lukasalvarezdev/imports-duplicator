@@ -50,7 +50,7 @@ In the build, `types.ts` would look like this:
 
 ## Known limitations
 - This tool only copies the files that are referenced in the file that you provide, if those files have imports from another
-files, it won't copy them. This will be added in the future.
+files, it won't copy them.
 - It only works `.ts` files.
 
 ## Why would I use this?
