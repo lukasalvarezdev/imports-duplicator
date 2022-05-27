@@ -23,6 +23,7 @@ func updatePaths(paths []string, srcPath string, dstPath string, fileToReplacePa
 
 		replaceFromSingleQuote := []byte("from " + "'" + path + "'")
 		replaceFromDoubleQuote := []byte("from " + `"` + path + `"`)
+
 		replaceToSingleQuote := []byte("from " + "'" + dstPath + fileName + "'")
 		replaceToDoubleQuote := []byte("from " + `"` + dstPath + fileName + `"`)
 
