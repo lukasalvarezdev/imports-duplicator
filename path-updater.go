@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"log"
+	"strings"
 )
 
 func updatePaths(paths []string, srcPath string, dstPath string, fileToReplacePath string) {
@@ -14,8 +15,11 @@ func updatePaths(paths []string, srcPath string, dstPath string, fileToReplacePa
 
 	for _, path := range paths {
 		fileName := getFileName(path)
+
 		// remove file extension
-		fileName = fileName[:len(fileName)-3]
+		spl := strings.Split(fileName, ".")
+		spl = spl[:len(spl)-1]
+		fileName = strings.Join(spl, ".")
 
 		replaceFromSingleQuote := []byte("from " + "'" + path + "'")
 		replaceFromDoubleQuote := []byte("from " + `"` + path + `"`)
