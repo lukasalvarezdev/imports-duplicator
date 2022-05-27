@@ -5,18 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 )
 
-// 1. read cmd params: <source_path> <destination_path> <file_to_replace_path>
-// 1. read file params[0]
-// 2. split string, only imports, with "" or ''
-// 3. get path
-// 4. copy files to ./files/
-// 5. replace main file to import the types from ./files/
-
 func main() {
-	srcPath, dstPath, fileToReplacePath := getCmdParams()
+	srcPath, dstPath := getCmdParams()
 
 	f, err := os.Open(srcPath)
 
@@ -30,17 +24,23 @@ func main() {
 
 	for scanner.Scan() {
 		txt := scanner.Text()
-		split := strings.Split(txt, "'")
-		path := split[1]
+		res, err := regexp.Compile("from")
 
-		if path == "" {
-			fmt.Println(fileToReplacePath)
+		if matches := res.MatchString(txt); err != nil || !matches {
 			continue
 		}
 
-		tspath := path + ".ts"
+		split := res.Split(txt, -1)
+		path, err := getPath(split)
 
-		copy(tspath, dstPath+tspath)
+		if err != nil {
+			continue
+		}
+
+		srcPath := getSrc(path)
+		fileName := getFileName(path)
+
+		copy(srcPath, dstPath+fileName)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -48,9 +48,36 @@ func main() {
 	}
 }
 
-func getCmdParams() (string, string, string) {
-	if len(os.Args) != 4 {
-		log.Fatal("Usage: go run . <source_path> <destination_path> <file_to_replace_path>")
+func getFileName(path string) string {
+	return strings.Split(path, "/")[len(strings.Split(path, "/"))-1] + ".ts"
+}
+
+func getSrc(path string) string {
+	return path + ".ts"
+}
+
+func getPath(split []string) (string, error) {
+	path := split[len(split)-1]
+	path = strings.Replace(path, " ", "", -1)
+
+	if path == "" {
+		return "", fmt.Errorf("path is empty")
 	}
-	return os.Args[1], os.Args[2], os.Args[3]
+
+	// remove last ' or "" from path
+	path = path[:len(path)-1]
+	// remove first ' or "" from path
+	path = path[1:]
+
+	return path, nil
+}
+
+func getCmdParams() (string, string) {
+	// if len(os.Args) != 4 {
+	// 	log.Fatal("Usage: go run . <source_path> <destination_path> <file_to_replace_path>")
+	// }
+	if len(os.Args) != 3 {
+		log.Fatal("Usage: go run . <source_path> <destination_path>")
+	}
+	return os.Args[1], os.Args[2]
 }
