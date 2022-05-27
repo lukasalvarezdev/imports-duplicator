@@ -47,6 +47,13 @@ In the build, `types.ts` would look like this:
  
  export type { User, Address }
  ```
+ 
+ And your folder structure would look like this:
+ 
+- `components/...`
+- `types.ts`
+- `temp-types/user.ts`
+- `temp-types/address.ts`
 
 ## Known limitations
 - This tool only copies the files that are referenced in the file that you provide, if those files have imports from another
