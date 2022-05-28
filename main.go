@@ -15,19 +15,14 @@ var wg = sync.WaitGroup{}
 
 func main() {
 	srcPath, dstPath, fileToReplacePath := getCmdParams()
-
 	makeCopy(srcPath, dstPath, fileToReplacePath)
 }
 
 func makeCopy(srcPath string, dstPath string, fileToReplacePath string) {
 	start := time.Now()
 	paths := make([]string, 0)
-
 	fmt.Println("Program started...")
-
-	if !strings.HasSuffix(dstPath, "/") {
-		dstPath = dstPath + "/"
-	}
+	dstPath = fixDstPath(dstPath)
 
 	f, err := os.Open(srcPath)
 
@@ -38,15 +33,6 @@ func makeCopy(srcPath string, dstPath string, fileToReplacePath string) {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-
-	// remove fileName from srcPath
-	file := getFileName(srcPath)
-	// remove .ts from fileName
-	file = file[:len(file)-3]
-
-	basePath := strings.Replace(srcPath, file, "", -1)
-
-	fmt.Printf("Scanning file %s...\n", srcPath)
 
 	for scanner.Scan() {
 		txt := scanner.Text()
@@ -66,35 +52,44 @@ func makeCopy(srcPath string, dstPath string, fileToReplacePath string) {
 		}
 
 		importPath := getImportPathWithExtension(path)
-		importPath = strings.Replace(importPath, "./", "", -1)
+		realPath := getRealPath(srcPath, importPath)
 		fileName := getFileName(path)
 
-		wg.Add(1)
-		var nBytes int64
-		var copyErr error
+		nBytesChnl := make(chan int64)
+		copyErrChnl := make(chan error)
 
-		go copy(basePath+importPath, dstPath+fileName, make(chan int64), make(chan error))
+		wg.Add(1)
+		go copy(realPath, dstPath+fileName, nBytesChnl, copyErrChnl)
+
+		nBytes, copyErr := <-nBytesChnl, <-copyErrChnl
 
 		if copyErr != nil {
-			log.Fatal(copyErr)
+			log.Fatal(copyErrChnl, " Error copying file")
 		}
 
-		fmt.Printf("Copied %d bytes from %s to %s\n", nBytes, importPath, dstPath+fileName)
-		paths = append(paths, path)
+		paths = append(paths, realPath)
+		fmt.Printf("Copied %v bytes from %s to %s\n", nBytes, realPath, dstPath+fileName)
 	}
-
-	fmt.Printf("Updating %s imports in %s...\n", srcPath, fileToReplacePath)
-	updatePaths(paths, srcPath, dstPath, fileToReplacePath)
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		log.Fatal(err, "Error while reading file")
 	}
 
-	fmt.Println("Program finished.")
+	// fmt.Printf("Updating %s imports in %s...\n", srcPath, fileToReplacePath)
+	// updatePaths(paths, srcPath, dstPath, fileToReplacePath)
 
 	elapsed := time.Since(start)
 	log.Printf("Execution time was %s", elapsed)
+
 	wg.Wait()
+}
+
+func fixDstPath(dstPath string) string {
+	if !strings.HasSuffix(dstPath, "/") {
+		dstPath = dstPath + "/"
+	}
+
+	return dstPath
 }
 
 func getFileName(path string) string {
@@ -131,4 +126,38 @@ func getCmdParams() (string, string, string) {
 		log.Fatal("Usage: go run . <source_path> <destination_path> <file_to_replace_path>")
 	}
 	return os.Args[1], os.Args[2], os.Args[3]
+}
+
+func getRealPath(src, importPath string) (realPath string) {
+	split := strings.Split(importPath, "/")
+	fileSplit := strings.Split(src, "/")
+
+	for _, path := range split {
+		if path == ".." {
+			last := fileSplit[len(fileSplit)-1]
+
+			if strings.Contains(last, ".ts") {
+				fileSplit = fileSplit[:len(fileSplit)-2]
+				continue
+			}
+
+			fileSplit = fileSplit[:len(fileSplit)-1]
+			continue
+		}
+
+		if path == "." {
+			last := fileSplit[len(fileSplit)-1]
+
+			if strings.Contains(last, ".ts") {
+				fileSplit = fileSplit[:len(fileSplit)-1]
+				continue
+			}
+
+			continue
+		}
+
+		fileSplit = append(fileSplit, path)
+	}
+
+	return strings.Join(fileSplit, "/")
 }
