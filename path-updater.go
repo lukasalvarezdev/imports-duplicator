@@ -7,15 +7,12 @@ import (
 	"strings"
 )
 
-func updatePaths(paths []string, srcPath string, dstPath string, fileToReplacePath string) {
+func updatePaths(paths []string, srcPath string, fileToReplacePath string) {
 	input, err := ioutil.ReadFile(srcPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	dstPath = strings.Replace(dstPath, "/test", "", -1)
-
-	// fmt.Println(dstPath, "HIIIII")
 	for _, path := range paths {
 		fileName := getFileName(path)
 
@@ -27,14 +24,14 @@ func updatePaths(paths []string, srcPath string, dstPath string, fileToReplacePa
 		replaceFromSingleQuote := []byte("from " + "'" + path + "'")
 		replaceFromDoubleQuote := []byte("from " + `"` + path + `"`)
 
-		replaceToSingleQuote := []byte("from " + "'" + dstPath + fileName + "'")
-		replaceToDoubleQuote := []byte("from " + `"` + dstPath + fileName + `"`)
+		replaceToSingleQuote := []byte("from " + "'" + "./out/" + fileName + "'")
+		replaceToDoubleQuote := []byte("from " + `"` + "./out/" + fileName + `"`)
 
 		input = bytes.Replace(input, replaceFromSingleQuote, replaceToSingleQuote, -1)
 		input = bytes.Replace(input, replaceFromDoubleQuote, replaceToDoubleQuote, -1)
 	}
 
-	if err = ioutil.WriteFile(fileToReplacePath, input, 0666); err != nil {
+	if err = ioutil.WriteFile(fileToReplacePath+".ts", input, 0666); err != nil {
 		log.Fatal(err)
 	}
 }
