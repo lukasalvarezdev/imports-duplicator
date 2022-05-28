@@ -14,8 +14,14 @@ import (
 var wg = sync.WaitGroup{}
 
 func main() {
-	start := time.Now()
 	srcPath, dstPath, fileToReplacePath := getCmdParams()
+
+	makeCopy(srcPath, dstPath, fileToReplacePath)
+}
+
+func makeCopy(srcPath string, dstPath string, fileToReplacePath string) {
+	start := time.Now()
+
 	paths := make([]string, 0)
 
 	fmt.Println("Program started...")
