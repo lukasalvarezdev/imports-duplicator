@@ -4,9 +4,12 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 func copy(src string, dst string, nBytesChan chan int64, copyErrorChan chan error) {
+	createDirIfNotExists(dst)
+
 	sourceFileStat, srcErr := os.Stat(src)
 	if srcErr != nil {
 		log.Fatal(srcErr)
@@ -34,10 +37,13 @@ func copy(src string, dst string, nBytesChan chan int64, copyErrorChan chan erro
 	copyErrorChan <- copyErr
 }
 
-func createDir(dir string) {
-	//Create a folder/directory at a full qualified path
-	err := os.Mkdir(dir, 0755)
-	if err != nil {
-		log.Fatal(err)
+func createDirIfNotExists(path string) {
+	file := getFileName(path)
+	// remove .ts from fileName
+	file = file[:len(file)-3]
+	folder := strings.Replace(path, file, "", -1)
+
+	if _, err := os.Stat(folder); os.IsNotExist(err) {
+		os.Mkdir(folder, os.ModePerm)
 	}
 }

@@ -6,11 +6,11 @@ import (
 )
 
 func TestMain(t *testing.T) {
-	makeCopy("types.ts", "./files/out/", "new.ts")
+	makeCopy("./test/index.ts", "./test/out/", "./test/parsed.ts")
 
-	os.Remove("./new.ts")
-	os.RemoveAll("./files/out/")
+	os.Remove("./test/parsed.ts")
+	os.RemoveAll("./test/out")
 
 	// we need the folder out again
-	os.Mkdir("./files/out/", os.ModePerm)
+	os.Mkdir("./test/out", os.ModePerm)
 }

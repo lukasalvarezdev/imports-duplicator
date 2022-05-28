@@ -21,10 +21,13 @@ func main() {
 
 func makeCopy(srcPath string, dstPath string, fileToReplacePath string) {
 	start := time.Now()
-
 	paths := make([]string, 0)
 
 	fmt.Println("Program started...")
+
+	if !strings.HasSuffix(dstPath, "/") {
+		dstPath = dstPath + "/"
+	}
 
 	f, err := os.Open(srcPath)
 
@@ -35,6 +38,13 @@ func makeCopy(srcPath string, dstPath string, fileToReplacePath string) {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+
+	// remove fileName from srcPath
+	file := getFileName(srcPath)
+	// remove .ts from fileName
+	file = file[:len(file)-3]
+
+	basePath := strings.Replace(srcPath, file, "", -1)
 
 	fmt.Printf("Scanning file %s...\n", srcPath)
 
@@ -56,13 +66,14 @@ func makeCopy(srcPath string, dstPath string, fileToReplacePath string) {
 		}
 
 		importPath := getImportPathWithExtension(path)
+		importPath = strings.Replace(importPath, "./", "", -1)
 		fileName := getFileName(path)
 
 		wg.Add(1)
 		var nBytes int64
 		var copyErr error
 
-		go copy(importPath, dstPath+"/"+fileName, make(chan int64), make(chan error))
+		go copy(basePath+importPath, dstPath+fileName, make(chan int64), make(chan error))
 
 		if copyErr != nil {
 			log.Fatal(copyErr)
@@ -102,8 +113,13 @@ func getPath(split []string) (string, error) {
 		return "", fmt.Errorf("path is empty")
 	}
 
+	if strings.Contains(path, ";") {
+		path = path[:len(path)-1]
+	}
+
 	// remove last ' or "" from path
 	path = path[:len(path)-1]
+
 	// remove first ' or "" from path
 	path = path[1:]
 

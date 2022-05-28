@@ -13,6 +13,9 @@ func updatePaths(paths []string, srcPath string, dstPath string, fileToReplacePa
 		log.Fatal(err)
 	}
 
+	dstPath = strings.Replace(dstPath, "/test", "", -1)
+
+	// fmt.Println(dstPath, "HIIIII")
 	for _, path := range paths {
 		fileName := getFileName(path)
 
