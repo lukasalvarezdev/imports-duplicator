@@ -1,13 +1,30 @@
 # Welcome to Imports Duplicator!
 A blazingly fast tool that allows you to copy imported files to another directory.
 
+## Get started
+1. Clone this repository.
+2. Set up golang (v1.18)
+3. Run `go test`
+4. Run `go run . <source_path> <output_file_name>`
+
+If all that worked, you should have now a directory `/out` with all the files that are being referenced in `<source_path>`
+and a file `<output_file_name>.ts` with all the info in `<source_path>` but with the imports updated.
+
+That's it!, now it's time to rock!
+
 ## How to use
-Very easy, just download the `exe` file in the root directory and execute it in your favorite terminal.
+Very easy, just run:
+```
+go build .
+```
+
+Now you should have a binary file `imports-duplicator` in the root directory.
 
 ## Usage
 
+This will execute the binary file, you can use your favorite terminal
  ```
-exe <source_path> <destination_path> <file_to_replace_path>
+imports-duplicator <source_path> <output_file_name>
  ```
  
  ## Example
@@ -31,19 +48,17 @@ The file `types.ts` that looks like this:
  
  
 ```sh
-#      This is to replace the file, if you want them in 
-#           another file, specify another path
-                           ⬇️
-exe types.ts temp-types/ types.ts
+go build .
+imports-duplicator types.ts import-from-here
     
 # Your build step
 npm run build
 ```
 
-In the build, `types.ts` would look like this:
+In the build, `import-from-here.ts` would look like this:
 ```typescript
- import type { User } from './temp-types/user'
- import type { Address } from './temp-types/address'
+ import type { User } from './out/user'
+ import type { Address } from './out/address'
  
  export type { User, Address }
  ```
@@ -52,8 +67,9 @@ In the build, `types.ts` would look like this:
  
 - `components/...`
 - `types.ts`
-- `temp-types/user.ts`
-- `temp-types/address.ts`
+- `import-from-here.ts`
+- `out/user.ts`
+- `out/address.ts`
 
 ## Known limitations
 - This tool only copies the files that are referenced in the file that you provide, if those files have imports from another
