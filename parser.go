@@ -1,36 +1,37 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
 )
 
-func copy(src, dst string) (int64, error) {
-	sourceFileStat, err := os.Stat(src)
-	if err != nil {
-
-		return 0, err
+func copy(src string, dst string, nBytesChan chan int64, copyErrorChan chan error) {
+	sourceFileStat, srcErr := os.Stat(src)
+	if srcErr != nil {
+		log.Fatal(srcErr)
 	}
 
 	if !sourceFileStat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", src)
+		log.Fatalf("%s is not a regular file", src)
 	}
 
-	source, err := os.Open(src)
-	if err != nil {
-		return 0, err
+	source, openErr := os.Open(src)
+	if openErr != nil {
+		log.Fatal(openErr)
 	}
 	defer source.Close()
 
-	destination, err := os.Create(dst)
-	if err != nil {
-		return 0, err
+	destination, createErr := os.Create(dst)
+	if createErr != nil {
+		log.Fatal(createErr)
 	}
 	defer destination.Close()
-	nBytes, err := io.Copy(destination, source)
-	return nBytes, err
+	nBytes, copyErr := io.Copy(destination, source)
+
+	wg.Done()
+	nBytesChan <- nBytes
+	copyErrorChan <- copyErr
 }
 
 func createDir(dir string) {

@@ -7,9 +7,14 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
+	"time"
 )
 
+var wg = sync.WaitGroup{}
+
 func main() {
+	start := time.Now()
 	srcPath, dstPath, fileToReplacePath := getCmdParams()
 	paths := make([]string, 0)
 
@@ -47,7 +52,11 @@ func main() {
 		importPath := getImportPathWithExtension(path)
 		fileName := getFileName(path)
 
-		nBytes, copyErr := copy(importPath, dstPath+fileName)
+		wg.Add(1)
+		var nBytes int64
+		var copyErr error
+
+		go copy(importPath, dstPath+"/"+fileName, make(chan int64), make(chan error))
 
 		if copyErr != nil {
 			log.Fatal(copyErr)
@@ -65,6 +74,10 @@ func main() {
 	}
 
 	fmt.Println("Program finished.")
+
+	elapsed := time.Since(start)
+	log.Printf("Execution time was %s", elapsed)
+	wg.Wait()
 }
 
 func getFileName(path string) string {
